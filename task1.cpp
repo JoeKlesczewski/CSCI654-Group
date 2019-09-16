@@ -1,4 +1,4 @@
-#include <climits>
+#include <cstdint>
 #include <iostream>
 #include <string>
 
@@ -13,7 +13,7 @@ int main(int argc, char **argv)
         return 2;
     }
 
-    long nonce = LONG_MIN;
+    int32_t nonce = INT32_MIN;
     std::string bhashstr = argv[1];
     std::string thashstr = argv[2];
     std::string hashstr;
@@ -24,7 +24,7 @@ int main(int argc, char **argv)
         ++nonce;
         // Question: should to_string really be a decimal string?? It is in the example...
         hashstr = sha256(sha256(bhashstr + std::to_string(nonce)));
-    } while (hashstr < thashstr && nonce < LONG_MAX);
+    } while (hashstr < thashstr && nonce < INT32_MAX);
     std::cout << "Resulting Hash: " << hashstr << std::endl;
     std::cout << "Nonce:" << nonce << std::endl;
 }
