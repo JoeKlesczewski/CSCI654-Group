@@ -20,11 +20,17 @@ int main(int argc, char **argv)
     std::cout << "BlockHash: " << bhashstr << std::endl;
     std::cout << "TargetHash: "<< thashstr << std::endl;
     std::cout << "Performing Proof-of_work...wait..." << std::endl;
-    do {
-        ++nonce;
+//    do {
+//        ++nonce;
+//        // Question: should to_string really be a decimal string?? It is in the example...
+//        hashstr = sha256(sha256(bhashstr + std::to_string(nonce)));
+//    } while (hashstr < thashstr);
+    for(nonce = INT32_MIN; nonce < INT32_MAX; ++nonce)
+    {
         // Question: should to_string really be a decimal string?? It is in the example...
         hashstr = sha256(sha256(bhashstr + std::to_string(nonce)));
-    } while (hashstr < thashstr && nonce < INT32_MAX);
+        if(hashstr < thashstr) { break; }
+    }
     std::cout << "Resulting Hash: " << hashstr << std::endl;
     std::cout << "Nonce:" << nonce << std::endl;
 }
