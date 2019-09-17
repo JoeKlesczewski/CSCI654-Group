@@ -26,7 +26,7 @@ int main(int argc, char **argv)
     // Find a nonce that gives a hash less than the target hash
     for(nonce = INT32_MIN; nonce < INT32_MAX; ++nonce)
     {
-        // Question: should to_string really be a decimal string?? It is in the example...
+        // Per the example, the nonce is stringified as a decimal string including leading -
         hashstr = sha256(sha256(bhashstr + std::to_string(nonce)));
         if(hashstr < thashstr) { break; }
     }
