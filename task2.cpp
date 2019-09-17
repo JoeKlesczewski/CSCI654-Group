@@ -5,6 +5,7 @@
 
 #include "sha256.h"
 
+#define OMP_CANCELLATION TRUE
 #define NUM_THREADS 8
 
 int main(int argc, char **argv)
@@ -23,22 +24,27 @@ int main(int argc, char **argv)
     std::cout << "TargetHash: "<< thashstr << std::endl;
     std::cout << "Performing Proof-of_work...wait..." << std::endl;
     // Set up loop variables
-    int32_t nonce = INT32_MIN;
-    std::string hashstr;
+    int32_t out_nonce;
+    std::string out_hashstr;
     // Find a nonce that gives a hash less than the target hash
-    #pragma omp parallel num_threads(NUM_THREADS) private(nonce, hashstr)
+    #pragma omp parallel num_threads(NUM_THREADS)
     {
-        std::string tmp_hashstr;
+        std::string hashstr;
         int id = omp_get_thread_num();
-        nonce += (INT32_MAX / NUM_THREADS) * 2 * id;
-        for(; nonce < INT32_MAX; ++nonce)
+        for(int32_t nonce = INT32_MIN + (INT32_MAX / NUM_THREADS) * 2 * id; nonce < INT32_MAX; ++nonce)
         {
             // Per the example, the nonce is stringified as a decimal string including leading -
-            tmp_hashstr = sha256(sha256(bhashstr + std::to_string(nonce)));
-            if(tmp_hashstr < thashstr) {  }
+            hashstr = sha256(sha256(bhashstr + std::to_string(nonce)));
+            if(hashstr < thashstr)
+            {   // Found the correct nonce - now need to return from this thread and terminate
+                out_nonce = nonce;
+                out_hashstr = hashstr;
+                #pragma omp cancel parallel
+            }
+            #pragma omp cancellation point parallel
         }
     }
     // Report results
-    std::cout << "Resulting Hash: " << hashstr << std::endl;
-    std::cout << "Nonce:" << nonce << std::endl;
+    std::cout << "Resulting Hash: " << out_hashstr << std::endl;
+    std::cout << "Nonce:" << out_nonce << std::endl;
 }
