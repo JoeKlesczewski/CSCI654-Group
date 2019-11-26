@@ -1,0 +1,6 @@
+ nvcc *.cu -o part2 --compiler-bindir /usr/local/pub/swm/gcc-7.3.0/bin/g++
+
+ nvcc sha256.cu -o sha256.o -dc --compiler-bindir /usr/local/pub/swm/gcc-7.3.0/bin/g++
+ nvcc part2.cu -o part2.o -dc --compiler-bindir /usr/local/pub/swm/gcc-7.3.0/bin/g++
+ nvcc -dlink part2.o sha256.o -o part2.exe
+ nvcc -arch=sm_20 -dlink part2.o sha256.o -o part2.exe
