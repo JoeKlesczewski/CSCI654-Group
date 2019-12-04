@@ -113,9 +113,12 @@ __device__ void SHA256::final(unsigned char *digest)
         SHA2_UNPACK32(m_h[i], &digest[i << 2]);
     }
 }
+
+__device__ static unsigned char *empty(unsigned l) { return (unsigned char *) malloc(l); }
  
 __device__ unsigned char *sha256(unsigned char *input, unsigned length)
 {
+//    return empty(length);
     unsigned char digest[SHA256::DIGEST_SIZE];
     memset(digest,0,SHA256::DIGEST_SIZE);
  
