@@ -20,11 +20,13 @@ __device__ bool less64(unsigned char *lhs, unsigned char *rhs)
     return false;
 }
 // Find a nonce 
-__global__ void find(unsigned char *thash, unsigned char *bhash, uint32_t *nonces, uint64_t *hashes)
+__global__ void find(unsigned char *thash, unsigned char *bhash, uint32_t *nonces, uint64_t *hashes, unsigned int *gpos)
 {
+    *gpos = 999;
     // Compute starting index and stride size
     uint64_t index = blockIdx.x * blockDim.x + threadIdx.x;
     uint64_t stride = blockDim.x * gridDim.x;
+    *gpos = index % UINT_MAX;
     
     unsigned char *hhash2;//[64];
     unsigned char hhash[64+8];
@@ -32,6 +34,7 @@ __global__ void find(unsigned char *thash, unsigned char *bhash, uint32_t *nonce
     
     for(uint32_t ns = index; ns < INT32_MAX ; ns += stride)
     {
+        *gpos = ns / 256;
         // Once a satisfactory nonce has been found, be done
         if(pos > 0) { return; }
 
@@ -44,13 +47,18 @@ __global__ void find(unsigned char *thash, unsigned char *bhash, uint32_t *nonce
         hhash2 = sha256(hhash2, 64);
 
         // A nonce is satisfactory if it results in a hash less than the target hash
-        if(less64(hhash2, thash) || pos < 5)
+        if(less64(hhash2, thash) || pos < 3)
         {
             unsigned int mypos = atomicInc(&pos, 4);
-            nonces[mypos] = ns;
+            //nonces[mypos] = ns;
+            //memcpy(&(nonces[mypos]), nc, 8);
+            nonces[mypos] = ((uint64_t)nc[0] << 56) + ((uint64_t)nc[1] << 48) + ((uint64_t)nc[2] << 40) +
+                            ((uint64_t)nc[3] << 32) + ((uint64_t)nc[4] << 24) + (nc[5] << 16) +
+                            (nc[6] <<  8) + nc[7];
             //hashes[mypos] = hhash2;
-            //memcpy(hashes[mypos], hhash2, 64);
+            memcpy(&(hashes[mypos]), hhash2, 64);
             free(hhash2);
+            *gpos = mypos; // just for testing
         }
         else
         {
@@ -77,17 +85,22 @@ int main(int argc, char **argv)
     unsigned char *bhg, *thg;
     uint32_t *nonces;
     uint64_t *hashes;
+    unsigned int *gpos;     // Purely for testing to see if we get output from the kernal
     cudaMallocManaged(&bhg,    64*sizeof(char));
     cudaMallocManaged(&thg,    64*sizeof(char));
     cudaMallocManaged(&nonces,  4*sizeof(uint32_t)); // Let's start with max 4 nonces...
     cudaMallocManaged(&hashes,  4*sizeof(uint64_t)); // Let's start with max 4 nonces...
+    cudaMallocManaged(&gpos,      sizeof(unsigned int));
+    //*gpos = 100;
 
     // Determine structure - the number of blocks is rounded up
-    int block_size = 256;
-    int num_blocks = (UINT32_MAX + block_size - 1) / block_size;
+//    int block_size = 256;
+//    int num_blocks = UINT32_MAX / block_size;
+    int num_blocks = 256;
+    int block_size = UINT32_MAX / num_blocks;
     
     // Run kernal
-    find<<<num_blocks, block_size>>>(thg, bhg, nonces, hashes);
+    find<<<num_blocks, block_size>>>(thg, bhg, nonces, hashes, gpos);
 
     std::cout <<   "BlockHash: " << bhashstr
               << "\nTargetHash: " << thashstr
@@ -103,12 +116,14 @@ int main(int argc, char **argv)
         std::cout << "Resulting Hash: " << hashes[i] << std::endl;
         std::cout << "Nonce:" << (int32_t) nonces[i] << std::endl;
     }
+    std::cout << *gpos << std::endl;
 
     // Free memory
     cudaFree(bhg);
     cudaFree(thg);
     cudaFree(nonces);
     cudaFree(hashes);
+    cudaFree(gpos);
 
     // Done
     return 0;
