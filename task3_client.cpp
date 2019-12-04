@@ -1,11 +1,18 @@
+#define _GLIBCXX_USE_CXX11_ABI 0
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <string>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#include <cstdint>
+#include "sha256.h"
+
 
 #define portno 1234
 
@@ -67,6 +74,25 @@ int main(int argc, char *argv[])
     printf("Thashstr is: %s\n", thashstr);
 
 
+    // Set up loop variables
+    int32_t nonce = INT32_MIN;
+    char *hashstr;
+
+    // Find a nonce that gives a hash less than the target hash
+    for(nonce = INT32_MIN; nonce < INT32_MAX; ++nonce)
+    {
+        char* cnonce = (char*)nonce;
+        char* sha_char;
+        strcpy(sha_char, (sha256(sha256(strcat(bhashstr, cnonce)))).c_str());
+        // Per the example, the nonce is stringified as a decimal string including leading -
+        hashstr = strcat(hashstr, sha_char);
+        if(hashstr < thashstr)
+        {
+            printf("DONE! Nonce is %s\n", hashstr);
+            break;
+        }
+    }
     close(sockfd);
     return 0;
 }
+
