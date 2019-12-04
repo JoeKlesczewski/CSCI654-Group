@@ -23,7 +23,7 @@ protected:
     uint32 m_h[8];
 };
 //__device__ static const unsigned char h[];
-__device__ const unsigned char h[16] = {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
+__constant__ const unsigned char h[16] = {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
 __device__ const static unsigned int sha256_k[64] =
             {0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5,
              0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
