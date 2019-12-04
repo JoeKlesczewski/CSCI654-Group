@@ -1,3 +1,4 @@
+
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -5,6 +6,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <cstdint>
 #define portno 1234
 
 void dostuff(int, char*, char*, int); /* function prototype */
@@ -16,8 +18,8 @@ void error(const char *msg)
 
 int main(int argc, char *argv[])
 {
-    char *bhashstr = "0aca36d7d8e3bd46e6bab5bf3a47230e91e100ccd241c169e9d375f5b2a28f82";
-    char *thashstr = "0000092a6893b712892a41e8438e3ff2242a68747105de0395826f60b38d88dc";
+    char *bhashstr = "0aca36d7d8e3bd46e6bab5bf3a47230e91e100ccd241c169e9d375f5b2a28f82 ";
+    char *thashstr = "0000092a6893b712892a41e8438e3ff2242a68747105de0395826f60b38d88dc ";
     int sockfd, newsockfd, pid;
     socklen_t clilen;
     struct sockaddr_in serv_addr, cli_addr;
@@ -83,7 +85,6 @@ void dostuff (int sockfd, char* bhashstr, char* thashstr, int counter)
     n = read(sockfd,buffer,255);
     if (n < 0) error("ERROR reading thashstr confirmation from client");
     printf("%s\n",buffer);
-
 
 
 }
