@@ -118,7 +118,6 @@ __device__ static unsigned char *empty(unsigned l) { return (unsigned char *) ma
  
 __device__ unsigned char *sha256(unsigned char *input, unsigned length)
 {
-//    return empty(length);
     unsigned char digest[SHA256::DIGEST_SIZE];
     memset(digest,0,SHA256::DIGEST_SIZE);
  
